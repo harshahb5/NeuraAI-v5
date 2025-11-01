@@ -1,35 +1,63 @@
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import pandas as pd
-import MetaTrader5 as mt5
-from datetime import datetime, timedelta
-import joblib
 import os
-from sklearn.ensemble import RandomForestClassifier
+import joblib
 import numpy as np
+from datetime import datetime, timedelta
+from sklearn.ensemble import RandomForestClassifier
+import requests
 
 app = Flask(__name__)
 CORS(app)
 
 MODEL_PATH = "model.pkl"
 TRADE_HISTORY_PATH = "trade_history.csv"
+API_KEY = "demo"  # You can get a free API key from financialmodelingprep.com
+
+# ======================================
+# Try importing MetaTrader5 (Optional)
+# ======================================
+try:
+    import MetaTrader5 as mt5
+    MT5_AVAILABLE = True
+except ImportError:
+    MT5_AVAILABLE = False
+    print("⚠️ MetaTrader5 not available, using API fallback mode")
 
 # ==========================
 # MT5 Connection Functions
 # ==========================
-def connect_mt5(account, password, server):
+def connect_mt5(account=None, password=None, server=None):
+    if not MT5_AVAILABLE:
+        return True, "Running in API mode (MT5 unavailable)"
     mt5.initialize()
     if not mt5.login(account, password=password, server=server):
         return False, mt5.last_error()
     return True, "Connected successfully"
 
-def get_live_data(symbol="XAUUSD", timeframe=mt5.TIMEFRAME_M15, bars=500):
-    rates = mt5.copy_rates_from_pos(symbol, timeframe, 0, bars)
-    df = pd.DataFrame(rates)
-    df['time'] = pd.to_datetime(df['time'], unit='s')
+# ==========================
+# Live Data Fetch
+# ==========================
+def get_live_data(symbol="XAUUSD", timeframe="15min", limit=500):
+    if MT5_AVAILABLE:
+        rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_M15, 0, limit)
+        df = pd.DataFrame(rates)
+        df['time'] = pd.to_datetime(df['time'], unit='s')
+    else:
+        # --- Fallback to FinancialModelingPrep API ---
+        url = f"https://financialmodelingprep.com/api/v3/historical-chart/{timeframe}/{symbol}?apikey={API_KEY}"
+        response = requests.get(url)
+        data = response.json()
+        df = pd.DataFrame(data)
+        df['time'] = pd.to_datetime(df['date'])
+        df.rename(columns={'close': 'close', 'open': 'open', 'high': 'high', 'low': 'low'}, inplace=True)
+        df = df[['time', 'open', 'high', 'low', 'close']].sort_values('time')
+
+    # Calculate EMAs
     df['ema9'] = df['close'].ewm(span=9, adjust=False).mean()
     df['ema15'] = df['close'].ewm(span=15, adjust=False).mean()
-    return df
+    return df.tail(limit)
 
 # ==========================
 # AI Model Functions
@@ -78,6 +106,9 @@ def save_trade(symbol, direction, entry_time, exit_time, pnl_points, entry_point
         df = pd.DataFrame([trade])
     df.to_csv(TRADE_HISTORY_PATH, index=False)
 
+# ==========================
+# Flask Routes
+# ==========================
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -85,9 +116,9 @@ def index():
 @app.route('/connect', methods=['POST'])
 def connect():
     data = request.json
-    account = int(data['account'])
-    password = data['password']
-    server = data['server']
+    account = data.get('account')
+    password = data.get('password')
+    server = data.get('server')
     success, msg = connect_mt5(account, password, server)
     return jsonify({"success": success, "message": msg})
 
