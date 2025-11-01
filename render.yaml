@@ -1,0 +1,16 @@
+# ----------------------------------------
+# Render deployment configuration file
+# ----------------------------------------
+services:
+  - type: web
+    name: neura-ai-v5
+    env: docker
+    plan: free
+    autoDeploy: true
+    region: oregon
+    healthCheckPath: /
+    dockerfilePath: ./Dockerfile
+    disk:
+      name: trade-data
+      mountPath: /app/data
+      sizeGB: 1

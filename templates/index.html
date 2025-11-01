@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neura.AI v5 Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/static/script.js" defer></script>
+</head>
+<body class="light-mode">
+  <header>
+    <h1>Neura.AI v5 – XAUUSD Live EMA Strategy</h1>
+    <div class="header-buttons">
+      <button id="themeToggle">🌙 Dark/Light</button>
+      <button id="connectBtn">⚙️ Connect MT5</button>
+      <button id="retrainBtn">🧠 Retrain Model</button>
+    </div>
+  </header>
+
+  <section class="main-section">
+    <div class="chart-container">
+      <h2>TradingView Main Chart</h2>
+      <iframe id="tradingview_chart" src="https://s.tradingview.com/widgetembed/?symbol=XAUUSD&interval=15&hidesidetoolbar=1" frameborder="0"></iframe>
+    </div>
+
+    <div class="data-section">
+      <h2>AI Prediction</h2>
+      <div id="aiPrediction">Fetching...</div>
+
+      <h3>Trade History</h3>
+      <button id="loadHistoryBtn">🔄 Load History</button>
+      <button id="exportCSVBtn">📁 Export CSV</button>
+      <table id="tradeTable">
+        <thead>
+          <tr>
+            <th>Symbol</th>
+            <th>Direction</th>
+            <th>Entry</th>
+            <th>Exit</th>
+            <th>PNL</th>
+            <th>View Chart</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="miniChartSection" class="hidden">
+    <h2>Trade Replay (Retest Mode)</h2>
+    <canvas id="miniChart"></canvas>
+    <button id="closeMiniChart">Close</button>
+  </section>
+
+  <!-- MT5 Login Popup -->
+  <div id="mt5Popup" class="popup hidden">
+    <div class="popup-content">
+      <h2>Connect to MT5</h2>
+      <label>Account Number</label>
+      <input type="text" id="mt5Account" placeholder="Enter MT5 Account" />
+      <label>Password</label>
+      <input type="password" id="mt5Password" placeholder="Enter Password" />
+      <label>Server</label>
+      <input type="text" id="mt5Server" placeholder="Broker Server Name" />
+      <button id="mt5LoginBtn">Login</button>
+      <button id="mt5CloseBtn" class="cancel">Cancel</button>
+      <p id="mt5Status"></p>
+    </div>
+  </div>
+</body>
+</html>

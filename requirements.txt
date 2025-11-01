@@ -1,0 +1,9 @@
+flask
+flask-cors
+pandas
+MetaTrader5
+joblib
+scikit-learn
+plotly
+requests
+gunicorn
