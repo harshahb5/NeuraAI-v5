@@ -1,7 +1,7 @@
 flask
 flask-cors
 pandas
-MetaTrader5
+requests
 joblib
 scikit-learn
 plotly
